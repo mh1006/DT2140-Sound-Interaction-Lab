@@ -53,6 +53,10 @@ engine.createDSP(audioContext, 1024)
 let engineOn = false;
 let speedRange = null;
 
+document.addEventListener('pointerdown', () => {
+    audioContext.resume().then(() => playAudio());
+});
+
 function accelerationChange(accx, accy, accz) {
     // playAudio()
 }
@@ -73,7 +77,7 @@ function rotationChange(rotx, roty, rotz) {
 
 
 function mousePressed() {
-    playAudio()
+    // playAudio()
     // Use this for debugging from the desktop!
 }
 
@@ -88,7 +92,7 @@ function deviceTurned() {
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio();
+    // playAudio();
 }
 
 function getMinMaxParam(address) {
@@ -97,6 +101,12 @@ function getMinMaxParam(address) {
     const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
     console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
     return [exampleMinValue, exampleMaxValue]
+}
+
+function makeAudible(address) {
+    const [mn, mx] = getMinMaxParam(address);
+    const current = dspNode.getParamValue ? dspNode.getParamValue(address) : mn;
+    if (current <= mn) dspNode.setParamValue(address, mn + 0.5 * (mx - mn));
 }
 
 //==========================================================================================
@@ -121,7 +131,8 @@ function playAudio() {
     // For example if you change to a bell sound, here you could use "/churchBell/gate" instead of
     // "/thunder/rumble".
     engineOn = !engineOn;
-    dspNode.setParamValue("/engine/gate", engineOn ? 1 : 0);   // stays on until you turn it off
+    if (engineOn) makeAudible("/engine/volume");
+    dspNode.setParamValue("/engine/gate", engineOn ? 1 : 0);
 }
 
 //==========================================================================================

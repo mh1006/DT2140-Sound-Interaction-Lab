@@ -50,28 +50,36 @@ thunder.createDSP(audioContext, 1024)
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
-const FREEFALL_THRESHOLD = 4;    // below this counts as "weightless"
-const FREEFALL_TIME_MS =  140;    // 30 cm fall ≈ 0.25 s
-let fallStart = null;            // when the fall started
-let fallTriggered = false;       // avoids triggering twice in one fall
+const FREEFALL_TIME_MS = 140;     // 10 cm
+const FREEFALL_RATIO = 0.3;
+let restMag = null;
+let fallStart = null;
+let fallTriggered = false;
+let minMag = 999;
+
+document.addEventListener('pointerdown', () => {
+    audioContext.resume().then(() => playAudio());
+});
 
 function accelerationChange(accx, accy, accz) {
     const mag = Math.sqrt(accx * accx + accy * accy + accz * accz);
+    if (!isFinite(mag)) return;
+    if (restMag === null) restMag = mag;
+    const threshold = restMag * FREEFALL_RATIO;
+    minMag = Math.min(minMag, mag);
 
-    if (mag < FREEFALL_THRESHOLD) {
-        // falling
-        if (fallStart === null) {
-            fallStart = millis();
-        }
+    showDebug('mag: ' + mag.toFixed(2) + '<br>gravity: ' + restMag.toFixed(2) + '<br>min: ' + minMag.toFixed(2));
+
+    if (restMag > 2 && mag < threshold) {
+        if (fallStart === null) fallStart = millis();
         if (!fallTriggered && millis() - fallStart >= FREEFALL_TIME_MS) {
             fallTriggered = true;
-            console.log("Free fall > 30 cm detected!");
             playAudio();
         }
     } else {
-        // caught or landed → reset
         fallStart = null;
         fallTriggered = false;
+        restMag = 0.98 * restMag + 0.02 * mag;
     }
 }
 
@@ -79,7 +87,7 @@ function rotationChange(rotx, roty, rotz) {
 }
 
 function mousePressed() {
-     playAudio()
+    // playAudio()
     // Use this for debugging from the desktop!
 }
 
@@ -103,6 +111,28 @@ function getMinMaxParam(address) {
     const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
     console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
     return [exampleMinValue, exampleMaxValue]
+}
+
+function accelerationChange(accx, accy, accz) {
+    const mag = Math.sqrt(accx * accx + accy * accy + accz * accz);
+    if (!isFinite(mag)) return;
+    if (restMag === null) restMag = mag;
+    const threshold = restMag * FREEFALL_RATIO;
+    minMag = Math.min(minMag, mag);
+
+    showDebug('mag: ' + mag.toFixed(2) + '<br>gravity: ' + restMag.toFixed(2) + '<br>min: ' + minMag.toFixed(2));
+
+    if (restMag > 2 && mag < threshold) {
+        if (fallStart === null) fallStart = millis();
+        if (!fallTriggered && millis() - fallStart >= FREEFALL_TIME_MS) {
+            fallTriggered = true;
+            playAudio();
+        }
+    } else {
+        fallStart = null;
+        fallTriggered = false;
+        restMag = 0.98 * restMag + 0.02 * mag;
+    }
 }
 
 //==========================================================================================
