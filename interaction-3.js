@@ -51,9 +51,10 @@ bubble.createDSP(audioContext, 1024)
 //
 //==========================================================================================
 
-let restMag = null;      // gravity value when the phone is still (learned automatically)
+let restMag = null;      // gravity value when the phone is still
 let smoothDev = 0;       // smoothed movement amount
-let bigFrames = 0;       // how many frames in a row had big movement
+let smallFrames = 0;     // how many frames in a row had small movement
+let lastBig = 0;         // time of the last big movement
 let lastDrop = 0;        // time of the last bubble
 
 function accelerationChange(accx, accy, accz) {
@@ -62,31 +63,33 @@ function accelerationChange(accx, accy, accz) {
         restMag = mag;
     }
 
-    // how far from "still" (0 = not moving)
     const dev = Math.abs(mag - restMag) / restMag;
+    smoothDev = 0.7 * smoothDev + 0.3 * dev;
 
-    // smoothing: vibrations last too briefly and get averaged away
-    smoothDev = 0.9 * smoothDev + 0.1 * dev;
-
-    if (smoothDev > 0.4) {
-        bigFrames++;
+    if (smoothDev > 0.3) {
+        // big movement → ignore
+        lastBig = millis();
+        smallFrames = 0;
+    } else if (smoothDev > 0.05) {
+        // small movement
+        smallFrames++;
     } else {
-        bigFrames = 0;
-        if (dev < 0.1) {
-            restMag = 0.995 * restMag + 0.005 * mag;   // update gravity only when still
-        }
+        // still
+        smallFrames = 0;
+        restMag = 0.99 * restMag + 0.01 * mag;
     }
 
-    // big movement for about 0.15 s → keep swinging = one bubble every 0.15 s
-    if (bigFrames >= 10 && millis() - lastDrop > 150) {
+    if (smallFrames >= 3 && millis() - lastBig > 300 && millis() - lastDrop > 200) {
         lastDrop = millis();
         playAudio();
     }
 }
 
+function rotationChange(rotx, roty, rotz) {
+}
 
 function mousePressed() {
-    // playAudio()
+    //playAudio(mouseX/windowWidth)
     // Use this for debugging from the desktop!
 }
 
@@ -101,7 +104,7 @@ function deviceTurned() {
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    // big movements are handled in accelerationChange
+    //playAudio();
 }
 
 function getMinMaxParam(address) {
@@ -114,18 +117,23 @@ function getMinMaxParam(address) {
 
 //==========================================================================================
 // AUDIO INTERACTION
+//------------------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------------------
+// Edit here to define your audio controls 
+//------------------------------------------------------------------------------------------
+//
 //==========================================================================================
 
-function playAudio(level) {
-    if (!dspNode) {
+function playAudio() {
+     if (!dspNode) {
         return;
     }
     if (audioContext.state === 'suspended') {
         return;
     }
-    // drop is a trigger: 0 → 1 → 0 = one bubble
     dspNode.setParamValue("/bubble/drop", 1)
-    setTimeout(() => { dspNode.setParamValue("/bubble/drop", 0) }, 50);
+    setTimeout(() => { dspNode.setParamValue("/bubble/drop", 0) }, 100);
 }
 
 //==========================================================================================
