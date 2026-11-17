@@ -59,14 +59,15 @@ function rotationChange(rotx, roty, rotz) {
 
     if (isRaised && !isPlaying) {
         if (dspNode && audioContext.state !== 'suspended') {
-            playAudio();
+            playAudio(1);
             isPlaying = true;
         }
     } else if (!isRaised && isPlaying) {
-        stopAudio();
+        playAudio(0);
         isPlaying = false;
     }
 }
+
 function accelerationChange(accx, accy, accz) {
 }
 
@@ -107,7 +108,7 @@ function getMinMaxParam(address) {
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
-function playAudio() {
+function playAudio(on) {
     if (!dspNode) {
         return;
     }
@@ -116,15 +117,7 @@ function playAudio() {
         return;
     }
 
-    dspNode.setParamValue("/rain/gate", 1);
-}
-
-function stopAudio() {
-    if (!dspNode) {
-        return;
-    }
-
-    dspNode.setParamValue("/rain/gate", 0);
+    dspNode.setParamValue("/rain/gate", on);
 }
 
 //==========================================================================================
