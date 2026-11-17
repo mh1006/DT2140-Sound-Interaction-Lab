@@ -12,7 +12,7 @@ let dspNodeParams = null;
 let jsonParams = null;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "engine";
+const dspName = "rain";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -25,7 +25,7 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-engine.createDSP(audioContext, 1024)
+rain.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
@@ -50,34 +50,28 @@ engine.createDSP(audioContext, 1024)
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
+
 let engineOn = false;
 let speedRange = null;
 
-document.addEventListener('pointerdown', () => {
-    audioContext.resume().then(() => playAudio());
-});
-
 function accelerationChange(accx, accy, accz) {
-    // playAudio()
 }
 
 function rotationChange(rotx, roty, rotz) {
-    if (!dspNode || !dspNodeParams || !engineOn) {
+    if (!engineOn) {
         return;
     }
-    if (!speedRange) {
-        speedRange = getMinMaxParam("/engine/maxSpeed");
-    }
-    const [minS, maxS] = speedRange;
 
-    // roty: tilting left/right goes from about -90 to 90 → convert to 0..1
     const t = constrain(map(roty, -90, 90, 0, 1), 0, 1);
-    dspNode.setParamValue("/engine/maxSpeed", minS + t * (maxS - minS));
+    playAudio(t);
 }
 
-
 function mousePressed() {
-    // playAudio()
+    if (!dspNode || audioContext.state === 'suspended') {
+        return;
+    }
+    engineOn = !engineOn;      
+    playAudio(0.5);
     // Use this for debugging from the desktop!
 }
 
@@ -92,7 +86,6 @@ function deviceTurned() {
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    // playAudio();
 }
 
 function getMinMaxParam(address) {
@@ -103,36 +96,25 @@ function getMinMaxParam(address) {
     return [exampleMinValue, exampleMaxValue]
 }
 
-function makeAudible(address) {
-    const [mn, mx] = getMinMaxParam(address);
-    const current = dspNode.getParamValue ? dspNode.getParamValue(address) : mn;
-    if (current <= mn) dspNode.setParamValue(address, mn + 0.5 * (mx - mn));
-}
-
 //==========================================================================================
 // AUDIO INTERACTION
-//------------------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------------------
-// Edit here to define your audio controls 
-//------------------------------------------------------------------------------------------
-//
 //==========================================================================================
 
-function playAudio() {
+function playAudio(speed) {
     if (!dspNode) {
         return;
     }
     if (audioContext.state === 'suspended') {
         return;
     }
-    // Edit here the addresses ("/thunder/rumble") depending on your WASM controls (you can see 
-    // them printed on the console of your browser when you load the page)
-    // For example if you change to a bell sound, here you could use "/churchBell/gate" instead of
-    // "/thunder/rumble".
-    engineOn = !engineOn;
-    if (engineOn) makeAudible("/engine/volume");
+  
     dspNode.setParamValue("/engine/gate", engineOn ? 1 : 0);
+
+    if (!speedRange) {
+        speedRange = getMinMaxParam("/engine/maxSpeed");
+    }
+    const [minS, maxS] = speedRange;
+    dspNode.setParamValue("/engine/maxSpeed", minS + speed * (maxS - minS));
 }
 
 //==========================================================================================
