@@ -58,44 +58,6 @@ let rainRange = null;
 let prevRot = null;      // previous frame's angles
 let swingSpeed = 0;      // smoothed swing speed
 
-let restMag = null;      // gravity value when the phone is still
-let smoothDev = 0;       // smoothed movement amount
-let bigFrames = 0;       // how many frames in a row had big movement
-let rainLevel = 0;       // rain intensity 0 ~ 1
-let rainRange = null;
-
-function accelerationChange(accx, accy, accz) {
-    const mag = Math.sqrt(accx * accx + accy * accy + accz * accz);
-    if (restMag === null) {
-        restMag = mag;
-    }
-
-    // how far from "still" (0 = not moving)
-    const dev = Math.abs(mag - restMag) / restMag;
-
-    // smoothing: vibrations last too briefly and get averaged away
-    smoothDev = 0.9 * smoothDev + 0.1 * dev;
-
-    if (smoothDev > 0.4) {
-        bigFrames++;
-    } else {
-        bigFrames = 0;
-        if (dev < 0.1) {
-            restMag = 0.995 * restMag + 0.005 * mag;   // update gravity only when still
-        }
-    }
-
-    if (bigFrames >= 10) {
-        rainLevel = 1;               // big movement for a while → rain
-    } else {
-        rainLevel = rainLevel * 0.95;
-        if (rainLevel < 0.02) {
-            rainLevel = 0;           // low enough → fully silent
-        }
-    }
-
-    playAudio(rainLevel);
-}
 
 function rotationChange(rotx, roty, rotz) {
     function angleDiff(a, b) {
@@ -130,8 +92,7 @@ function rotationChange(rotx, roty, rotz) {
     playAudio(rainLevel);
 }
 
-function rotationChange(rotx, roty, rotz) {
-}
+
 
 function mousePressed() {
     playAudio(mouseX/windowWidth)
