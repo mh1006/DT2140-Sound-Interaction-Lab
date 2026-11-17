@@ -59,24 +59,12 @@ let lastDrop = 0;
 
 function accelerationChange(accx, accy, accz) {
     const mag = Math.sqrt(accx * accx + accy * accy + accz * accz);
-    if (!isFinite(mag) || mag < 0.1) return;
-
-    if (restMag === null) restMag = mag;
-    const dev = Math.abs(mag - restMag) / restMag;
-    smoothDev = 0.7 * smoothDev + 0.3 * dev;
-
-    if (smoothDev > 0.5) {
-        lastBig = millis();
-        smallFrames = 0;
-    } else if (smoothDev > 0.02) {
-        smallFrames++;
-    } else {
-        smallFrames = 0;
-        restMag = 0.99 * restMag + 0.01 * mag;
-    }
-
+    const dev = Math.abs(mag - 9.8);
     const now = millis();
-    if (smallFrames >= 3 && now - lastBig > 300 && now - lastDrop > 120) {
+
+    if (dev > 2.0) {
+        lastBig = now;
+    } else if (dev > 0.2 && now - lastBig > 300 && now - lastDrop > 100) {
         lastDrop = now;
         playAudio();
     }
