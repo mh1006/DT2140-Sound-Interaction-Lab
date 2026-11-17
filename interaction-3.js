@@ -65,7 +65,7 @@ function accelerationChange(accx, accy, accz) {
     const dev = Math.abs(mag - restMag) / restMag;
     smoothDev = 0.7 * smoothDev + 0.3 * dev;
 
-    if (smoothDev > 0.12) {
+    if (smoothDev > 0.5) {
         lastBig = millis();
         smallFrames = 0;
     } else if (smoothDev > 0.02) {
