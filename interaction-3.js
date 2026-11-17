@@ -65,6 +65,8 @@ function rotationChange(rotx, roty, rotz) {
     } else if (!isRaised && isPlaying) {
         playAudio(0);
         isPlaying = false;
+    } else if (!isRaised && !isPlaying && dspNode) {
+        dspNode.setParamValue("/rain/gate", 0);
     }
 }
 
