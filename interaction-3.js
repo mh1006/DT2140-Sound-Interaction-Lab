@@ -12,7 +12,7 @@ let dspNodeParams = null;
 let jsonParams = null;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "bubble";
+const dspName = "rain";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -25,7 +25,7 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-bubble.createDSP(audioContext, 1024)
+rain.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
@@ -51,33 +51,22 @@ bubble.createDSP(audioContext, 1024)
 //
 //==========================================================================================
 
-let restMag = null;
-let smoothDev = 0;
-let smallFrames = 0;
-let lastBig = 0;
-let lastDrop = 0;
+let rainOn = false;
 
 function accelerationChange(accx, accy, accz) {
-    const mag = Math.sqrt(accx * accx + accy * accy + accz * accz);
-    const dev = Math.abs(mag - 9.8);
-    const now = millis();
-
-    if (dev > 2.0) {
-        lastBig = now;
-    } else if (dev > 0.2 && now - lastBig > 300 && now - lastDrop > 100) {
-        lastDrop = now;
-        playAudio();
-    }
 }
 
 function rotationChange(rotx, roty, rotz) {
+    const up = rotx >= 80 && rotx <= 90;
+    if (up !== rainOn) {
+        rainOn = up;
+        playAudio(rainOn ? 1 : 0);
+    }
 }
 
 function mousePressed() {
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-    playAudio();
+    //playAudio()
+    // Use this for debugging from the desktop!
 }
 
 function deviceMoved() {
@@ -116,11 +105,10 @@ function playAudio() {
      if (!dspNode) {
         return;
     }
-    if (audioContext.state === 'suspended') {
+     if (audioContext.state === 'suspended') {
         return;
     }
-    dspNode.setParamValue("/bubble/drop", 1)
-    setTimeout(() => { dspNode.setParamValue("/bubble/drop", 0) }, 100);
+    dspNode.setParamValue("/rain/gate", on);
 }
 
 //==========================================================================================
