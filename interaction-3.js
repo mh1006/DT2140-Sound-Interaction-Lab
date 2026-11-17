@@ -54,8 +54,15 @@ rain.createDSP(audioContext, 1024)
 let isPlaying = false;
 let isRaised = false;
 
+const dbg = document.createElement('div');
+dbg.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font:22px monospace;padding:8px;z-index:9999;';
 function rotationChange(rotx, roty, rotz) {
     isRaised = (rotx >= 80);
+
+    if (!dbg.parentNode) {
+        document.body.appendChild(dbg);
+    }
+    dbg.textContent = 'rotx ' + rotx + ' raised ' + isRaised + ' playing ' + isPlaying;
 
     if (isRaised && !isPlaying) {
         if (dspNode && audioContext.state !== 'suspended') {
@@ -67,6 +74,7 @@ function rotationChange(rotx, roty, rotz) {
         isPlaying = false;
     }
 }
+
 function accelerationChange(accx, accy, accz) {
 }
 
