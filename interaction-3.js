@@ -55,22 +55,38 @@ let restMag = null;      // gravity value when the phone is still (learned autom
 let rainLevel = 0;       // rain intensity 0 ~ 1
 let rainRange = null;
 
-function accelerationChange(accx, accy, accz) {
-    const mag = Math.sqrt(accx * accx + accy * accy + accz * accz);
-    if (restMag === null) {
-        restMag = mag;
+let prevRot = null;      // previous frame's angles
+let swingSpeed = 0;      // smoothed swing speed
+
+function rotationChange(rotx, roty, rotz) {
+    // angle difference, handling the jump between 359° and 0°
+    function angleDiff(a, b) {
+        let d = a - b;
+        while (d > 180) d -= 360;
+        while (d < -180) d += 360;
+        return Math.abs(d);
     }
 
-    // how far the movement is from "still" (0 = not moving)
-    const change = Math.abs(mag - restMag) / restMag;
+    if (prevRot === null) {
+        prevRot = [rotx, roty, rotz];
+        return;
+    }
 
-    if (change > 6.5) {
-        // big movement (wiper swing) → full rain
-        rainLevel = 1;
+    // how many degrees it turned since the last frame (largest of the three axes)
+    const speed = Math.max(
+        angleDiff(rotx, prevRot[0]),
+        angleDiff(roty, prevRot[1]),
+        angleDiff(rotz, prevRot[2])
+    );
+    prevRot = [rotx, roty, rotz];
+
+    // smoothing: brief vibrations get averaged out
+    swingSpeed = 0.85 * swingSpeed + 0.15 * speed;
+
+    if (swingSpeed > 2.5) {
+        rainLevel = 1;                  // big swing → rain
     } else {
-        // small or no movement → rain slowly fades
-        rainLevel = rainLevel * 0.98;
-        restMag = 0.99 * restMag + 0.01 * mag;
+        rainLevel = rainLevel * 0.98;   // not swinging → rain slowly fades
     }
 
     playAudio(rainLevel);
