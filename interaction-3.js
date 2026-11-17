@@ -65,8 +65,12 @@ function rotationChange(rotx, roty, rotz) {
 }
 
 function mousePressed() {
-    //playAudio()
-    // Use this for debugging from the desktop!
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission();
+    }
 }
 
 function deviceMoved() {
