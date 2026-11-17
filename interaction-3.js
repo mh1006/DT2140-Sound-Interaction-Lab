@@ -51,8 +51,29 @@ rain.createDSP(audioContext, 1024)
 //
 //==========================================================================================
 
+let restMag = null;      // gravity value when the phone is still (learned automatically)
+let rainLevel = 0;       // rain intensity 0 ~ 1
+let rainRange = null;
+
 function accelerationChange(accx, accy, accz) {
-    // playAudio()
+    const mag = Math.sqrt(accx * accx + accy * accy + accz * accz);
+    if (restMag === null) {
+        restMag = mag;
+    }
+
+    // how far the movement is from "still" (0 = not moving)
+    const change = Math.abs(mag - restMag) / restMag;
+
+    if (change > 0.5) {
+        // big movement (wiper swing) → full rain
+        rainLevel = 1;
+    } else {
+        // small or no movement → rain slowly fades
+        rainLevel = rainLevel * 0.98;
+        restMag = 0.99 * restMag + 0.01 * mag;
+    }
+
+    playAudio(rainLevel);
 }
 
 function rotationChange(rotx, roty, rotz) {
@@ -74,7 +95,7 @@ function deviceTurned() {
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio();
+    // big movements are handled in accelerationChange
 }
 
 function getMinMaxParam(address) {
@@ -87,23 +108,21 @@ function getMinMaxParam(address) {
 
 //==========================================================================================
 // AUDIO INTERACTION
-//------------------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------------------
-// Edit here to define your audio controls 
-//------------------------------------------------------------------------------------------
-//
 //==========================================================================================
 
-function playAudio(pressure) {
+function playAudio(level) {
     if (!dspNode) {
         return;
     }
     if (audioContext.state === 'suspended') {
         return;
     }
-    console.log(pressure)
-    dspNode.setParamValue("/brass/blower/pressure", pressure)
+    // level is 0~1, converted to the parameter's range (never goes past the max)
+    if (!rainRange) {
+        rainRange = getMinMaxParam("/rain/density");   // ← change to the name shown in the console
+    }
+    const [minR, maxR] = rainRange;
+    dspNode.setParamValue("/rain/density", minR + level * (maxR - minR));
 }
 
 //==========================================================================================
