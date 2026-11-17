@@ -12,7 +12,7 @@ let dspNodeParams = null;
 let jsonParams = null;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "rain";
+const dspName = "bubble";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -25,7 +25,7 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-rain.createDSP(audioContext, 1024)
+bubble.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
@@ -134,10 +134,10 @@ function playAudio(level) {
     }
     // level is 0~1, converted to the parameter's range (never goes past the max)
     if (!rainRange) {
-        rainRange = getMinMaxParam("/rain/density");   // ← change to the name shown in the console
+        rainRange = getMinMaxParam("/bubble/drop");   // ← change to the name shown in the console
     }
     const [minR, maxR] = rainRange;
-    dspNode.setParamValue("/rain/density", minR + level * (maxR - minR));
+    dspNode.setParamValue("/bubble/drop", minR + level * (maxR - minR));
 }
 
 //==========================================================================================
