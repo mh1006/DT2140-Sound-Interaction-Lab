@@ -12,7 +12,7 @@ let dspNodeParams = null;
 let jsonParams = null;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "bells";
+const dspName = "thunder";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -25,7 +25,7 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-bells.createDSP(audioContext, 1024)
+thunder.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
@@ -50,9 +50,29 @@ bells.createDSP(audioContext, 1024)
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
+const FREEFALL_THRESHOLD = 3;    // below this counts as "weightless"
+const FREEFALL_TIME_MS = 250;    // 30 cm fall ≈ 0.25 s
+let fallStart = null;            // when the fall started
+let fallTriggered = false;       // avoids triggering twice in one fall
 
 function accelerationChange(accx, accy, accz) {
-    // playAudio()
+    const mag = Math.sqrt(accx * accx + accy * accy + accz * accz);
+
+    if (mag < FREEFALL_THRESHOLD) {
+        // falling
+        if (fallStart === null) {
+            fallStart = millis();
+        }
+        if (!fallTriggered && millis() - fallStart >= FREEFALL_TIME_MS) {
+            fallTriggered = true;
+            console.log("Free fall > 30 cm detected!");
+            playAudio();
+        }
+    } else {
+        // caught or landed → reset
+        fallStart = null;
+        fallTriggered = false;
+    }
 }
 
 function rotationChange(rotx, roty, rotz) {
@@ -102,8 +122,8 @@ function playAudio() {
     if (audioContext.state === 'suspended') {
         return;
     }
-    dspNode.setParamValue("/englishBell/gate", 1)
-    setTimeout(() => { dspNode.setParamValue("/englishBell/gate", 0) }, 100);
+    dspNode.setParamValue("/thunder/rumble", 1)
+    setTimeout(() => { dspNode.setParamValue("/thunder/rumble", 0) }, 100);
 }
 
 //==========================================================================================
