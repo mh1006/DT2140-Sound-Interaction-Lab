@@ -98,7 +98,39 @@ function accelerationChange(accx, accy, accz) {
 }
 
 function rotationChange(rotx, roty, rotz) {
-    
+    function angleDiff(a, b) {
+        let d = a - b;
+        while (d > 180) d -= 360;
+        while (d < -180) d += 360;
+        return Math.abs(d);
+    }
+
+    if (prevRot === null) {
+        prevRot = [rotx, roty, rotz];
+        return;
+    }
+
+    // how many degrees it turned since the last frame (largest of the three axes)
+    const speed = Math.max(
+        angleDiff(rotx, prevRot[0]),
+        angleDiff(roty, prevRot[1]),
+        angleDiff(rotz, prevRot[2])
+    );
+    prevRot = [rotx, roty, rotz];
+
+    // smoothing: brief vibrations get averaged out
+    swingSpeed = 0.85 * swingSpeed + 0.15 * speed;
+
+    if (swingSpeed > 2.5) {
+        rainLevel = 1;                  // big swing → rain
+    } else {
+        rainLevel = rainLevel * 0.7;   // not swinging → rain slowly fades
+    }
+
+    playAudio(rainLevel);
+}
+
+function rotationChange(rotx, roty, rotz) {
 }
 
 function mousePressed() {
