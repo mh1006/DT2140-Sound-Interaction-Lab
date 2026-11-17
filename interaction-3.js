@@ -52,6 +52,7 @@ rain.createDSP(audioContext, 1024)
 //==========================================================================================
 
 let rainOn = false;
+let lastRotx = 0;
 
 function accelerationChange(accx, accy, accz) {
 }
@@ -65,12 +66,8 @@ function rotationChange(rotx, roty, rotz) {
 }
 
 function mousePressed() {
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission();
-    }
+    // playAudio()
+    // Use this for debugging from the desktop!
 }
 
 function deviceMoved() {
@@ -105,7 +102,7 @@ function getMinMaxParam(address) {
 //
 //==========================================================================================
 
-function playAudio() {
+function playAudio(on) {
      if (!dspNode) {
         return;
     }
