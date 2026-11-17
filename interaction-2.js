@@ -50,8 +50,8 @@ thunder.createDSP(audioContext, 1024)
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
-const FREEFALL_THRESHOLD = 3;    // below this counts as "weightless"
-const FREEFALL_TIME_MS = 250;    // 30 cm fall ≈ 0.25 s
+const FREEFALL_THRESHOLD = 4;    // below this counts as "weightless"
+const FREEFALL_TIME_MS =  140;    // 30 cm fall ≈ 0.25 s
 let fallStart = null;            // when the fall started
 let fallTriggered = false;       // avoids triggering twice in one fall
 
@@ -79,7 +79,7 @@ function rotationChange(rotx, roty, rotz) {
 }
 
 function mousePressed() {
-    // playAudio()
+     playAudio()
     // Use this for debugging from the desktop!
 }
 
