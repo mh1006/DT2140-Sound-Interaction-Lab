@@ -64,7 +64,7 @@ function accelerationChange(accx, accy, accz) {
     // how far the movement is from "still" (0 = not moving)
     const change = Math.abs(mag - restMag) / restMag;
 
-    if (change > 0.5) {
+    if (change > 6.5) {
         // big movement (wiper swing) → full rain
         rainLevel = 1;
     } else {
