@@ -61,18 +61,22 @@ function rotationChange(rotx, roty, rotz) {
     if (!engineOn) {
         return;
     }
-
-    const t = constrain(map(roty, -90, 90, 0, 1), 0, 1);
-    playAudio(t);
+    const rate = Math.min(Math.abs(rotz) / 360, 1);
+    spin = 0.8 * spin + 0.2 * rate;
 }
 
+
 function mousePressed() {
-    if (!dspNode || audioContext.state === 'suspended') {
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+    if (!dspNode) {
         return;
     }
-    engineOn = !engineOn;      
-    playAudio(0.5);
-    // Use this for debugging from the desktop!
+    engineOn = !engineOn;
+    if (!engineOn) {
+        dspNode.setParamValue("/engine/gate", 0);
+    }
 }
 
 function deviceMoved() {
@@ -100,6 +104,13 @@ function getMinMaxParam(address) {
 // AUDIO INTERACTION
 //==========================================================================================
 
+setInterval(() => {
+    spin *= 0.9;
+    if (engineOn) {
+        playAudio(spin);
+    }
+}, 50);
+
 function playAudio(speed) {
     if (!dspNode) {
         return;
@@ -107,13 +118,11 @@ function playAudio(speed) {
     if (audioContext.state === 'suspended') {
         return;
     }
-  
-    dspNode.setParamValue("/engine/gate", engineOn ? 1 : 0);
-
     if (!speedRange) {
         speedRange = getMinMaxParam("/engine/maxSpeed");
     }
     const [minS, maxS] = speedRange;
+    dspNode.setParamValue("/engine/gate", engineOn ? 1 : 0);
     dspNode.setParamValue("/engine/maxSpeed", minS + speed * (maxS - minS));
 }
 

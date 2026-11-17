@@ -51,36 +51,33 @@ bubble.createDSP(audioContext, 1024)
 //
 //==========================================================================================
 
-let restMag = null;      // gravity value when the phone is still
-let smoothDev = 0;       // smoothed movement amount
-let smallFrames = 0;     // how many frames in a row had small movement
-let lastBig = 0;         // time of the last big movement
-let lastDrop = 0;        // time of the last bubble
+let restMag = null;
+let smoothDev = 0;
+let smallFrames = 0;
+let lastBig = 0;
+let lastDrop = 0;
 
 function accelerationChange(accx, accy, accz) {
     const mag = Math.sqrt(accx * accx + accy * accy + accz * accz);
-    if (restMag === null) {
-        restMag = mag;
-    }
+    if (!isFinite(mag) || mag < 0.1) return;
 
+    if (restMag === null) restMag = mag;
     const dev = Math.abs(mag - restMag) / restMag;
     smoothDev = 0.7 * smoothDev + 0.3 * dev;
 
-    if (smoothDev > 0.3) {
-        // big movement → ignore
+    if (smoothDev > 0.12) {
         lastBig = millis();
         smallFrames = 0;
-    } else if (smoothDev > 0.05) {
-        // small movement
+    } else if (smoothDev > 0.02) {
         smallFrames++;
     } else {
-        // still
         smallFrames = 0;
         restMag = 0.99 * restMag + 0.01 * mag;
     }
 
-    if (smallFrames >= 3 && millis() - lastBig > 300 && millis() - lastDrop > 200) {
-        lastDrop = millis();
+    const now = millis();
+    if (smallFrames >= 3 && now - lastBig > 300 && now - lastDrop > 120) {
+        lastDrop = now;
         playAudio();
     }
 }
@@ -89,8 +86,10 @@ function rotationChange(rotx, roty, rotz) {
 }
 
 function mousePressed() {
-    //playAudio(mouseX/windowWidth)
-    // Use this for debugging from the desktop!
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+    playAudio();
 }
 
 function deviceMoved() {
