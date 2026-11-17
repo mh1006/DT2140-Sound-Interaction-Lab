@@ -51,19 +51,25 @@ rain.createDSP(audioContext, 1024)
 //
 //==========================================================================================
 
-let rainOn = false;
-let lastRotx = 0;
+let isPlaying = false;
+let isRaised = false;
 
+function rotationChange(rotx, roty, rotz) {
+    isRaised = (rotx >= 80);
+
+    if (isRaised && !isPlaying) {
+        if (dspNode && audioContext.state !== 'suspended') {
+            playAudio();
+            isPlaying = true;
+        }
+    } else if (!isRaised && isPlaying) {
+        stopAudio();
+        isPlaying = false;
+    }
+}
 function accelerationChange(accx, accy, accz) {
 }
 
-function rotationChange(rotx, roty, rotz) {
-    const up = rotx >= 80 && rotx <= 90;
-    if (up !== rainOn) {
-        rainOn = up;
-        playAudio(rainOn ? 1 : 0);
-    }
-}
 
 function mousePressed() {
     // playAudio()
@@ -101,15 +107,24 @@ function getMinMaxParam(address) {
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
+function playAudio() {
+    if (!dspNode) {
+        return;
+    }
 
-function playAudio(on) {
-     if (!dspNode) {
+    if (audioContext.state === 'suspended') {
         return;
     }
-     if (audioContext.state === 'suspended') {
+
+    dspNode.setParamValue("/rain/gate", 1);
+}
+
+function stopAudio() {
+    if (!dspNode) {
         return;
     }
-    dspNode.setParamValue("/rain/gate", on);
+
+    dspNode.setParamValue("/rain/gate", 0);
 }
 
 //==========================================================================================
